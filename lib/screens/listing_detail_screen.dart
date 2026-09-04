@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -187,29 +188,37 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             height: 280,
             child: Stack(
               children: [
-                PageView.builder(
-                  controller: _photoController,
-                  itemCount: listing.photoUrls.isEmpty
-                      ? 1
-                      : listing.photoUrls.length,
-                  onPageChanged: (i) => setState(() => _currentPhoto = i),
-                  itemBuilder: (context, index) {
-                    if (listing.photoUrls.isEmpty) {
-                      return const ColoredBox(
-                        color: Colors.black12,
-                        child: Icon(Icons.home_outlined, size: 64),
+                ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    dragDevices: {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                    },
+                  ),
+                  child: PageView.builder(
+                    controller: _photoController,
+                    itemCount: listing.photoUrls.isEmpty
+                        ? 1
+                        : listing.photoUrls.length,
+                    onPageChanged: (i) => setState(() => _currentPhoto = i),
+                    itemBuilder: (context, index) {
+                      if (listing.photoUrls.isEmpty) {
+                        return const ColoredBox(
+                          color: Colors.black12,
+                          child: Icon(Icons.home_outlined, size: 64),
+                        );
+                      }
+                      return Image.network(
+                        listing.photoUrls[index],
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (_, __, ___) => const ColoredBox(
+                          color: Colors.black12,
+                          child: Icon(Icons.image_not_supported_outlined),
+                        ),
                       );
-                    }
-                    return Image.network(
-                      listing.photoUrls[index],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      errorBuilder: (_, __, ___) => const ColoredBox(
-                        color: Colors.black12,
-                        child: Icon(Icons.image_not_supported_outlined),
-                      ),
-                    );
-                  },
+                    },
+                  ),
                 ),
                 if (listing.photoUrls.length > 1)
                   Positioned(
@@ -234,6 +243,52 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                       ),
                     ),
                   ),
+                if (listing.photoUrls.length > 1) ...[
+                  Positioned(
+                    left: 8,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: IconButton.filled(
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black45,
+                        ),
+                        onPressed: _currentPhoto > 0
+                            ? () => _photoController.previousPage(
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeOut,
+                              )
+                            : null,
+                        icon: const Icon(
+                          Icons.chevron_left,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: IconButton.filled(
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black45,
+                        ),
+                        onPressed: _currentPhoto < listing.photoUrls.length - 1
+                            ? () => _photoController.nextPage(
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeOut,
+                              )
+                            : null,
+                        icon: const Icon(
+                          Icons.chevron_right,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
