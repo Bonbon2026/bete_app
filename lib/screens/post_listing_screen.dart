@@ -255,10 +255,12 @@ class _PostListingScreenState extends State<PostListingScreen> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty)
+                      if (v == null || v.trim().isEmpty) {
                         return 'Price is required';
-                      if (double.tryParse(v) == null)
+                      }
+                      if (double.tryParse(v) == null) {
                         return 'Enter a valid number';
+                      }
                       return null;
                     },
                   ),
@@ -377,7 +379,7 @@ class _PostListingScreenState extends State<PostListingScreen> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _pickedPhotos.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         return Stack(
                           children: [

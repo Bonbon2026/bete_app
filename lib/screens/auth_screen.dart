@@ -108,8 +108,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       prefixIcon: Icon(Icons.email_outlined),
                     ),
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty)
+                      if (value == null || value.trim().isEmpty) {
                         return 'Email is required';
+                      }
                       if (!value.contains('@')) return 'Enter a valid email';
                       return null;
                     },
@@ -125,10 +126,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       prefixIcon: Icon(Icons.lock_outline),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return 'Password is required';
-                      if (value.length < 6)
+                      }
+                      if (value.length < 6) {
                         return 'Must be at least 6 characters';
+                      }
                       return null;
                     },
                   ),

@@ -83,8 +83,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty)
+                  if (v == null || v.trim().isEmpty) {
                     return 'Phone number is required';
+                  }
                   if (v.trim().length < 9) return 'Enter a valid phone number';
                   return null;
                 },

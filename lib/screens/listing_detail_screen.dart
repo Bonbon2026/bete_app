@@ -212,7 +212,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         listing.photoUrls[index],
                         fit: BoxFit.cover,
                         width: double.infinity,
-                        errorBuilder: (_, __, ___) => const ColoredBox(
+                        errorBuilder: (_, _, _) => const ColoredBox(
                           color: Colors.black12,
                           child: Icon(Icons.image_not_supported_outlined),
                         ),

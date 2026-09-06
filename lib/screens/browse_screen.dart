@@ -227,7 +227,7 @@ class _ListingCard extends StatelessWidget {
                   ? Image.network(
                       listing.photoUrls.first,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const ColoredBox(
+                      errorBuilder: (_, _, _) => const ColoredBox(
                         color: Colors.black12,
                         child: Icon(Icons.image_not_supported_outlined),
                       ),
