@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../theme/app_theme.dart';
 import '../models/listing.dart';
+import 'photo_gallery_screen.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final Listing listing;
@@ -208,13 +210,25 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           child: Icon(Icons.home_outlined, size: 64),
                         );
                       }
-                      return Image.network(
-                        listing.photoUrls[index],
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        errorBuilder: (_, _, _) => const ColoredBox(
-                          color: Colors.black12,
-                          child: Icon(Icons.image_not_supported_outlined),
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => PhotoGalleryScreen(
+                                photoUrls: listing.photoUrls,
+                                initialIndex: index,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Image.network(
+                          listing.photoUrls[index],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (_, __, ___) => const ColoredBox(
+                            color: Colors.black12,
+                            child: Icon(Icons.image_not_supported_outlined),
+                          ),
                         ),
                       );
                     },
@@ -316,7 +330,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         label: Text(
                           'Verified ${_formatDate(listing.lastVerifiedAt!)}',
                         ),
-                        backgroundColor: const Color(0xFF0E7C5A),
+                        backgroundColor: AppTheme.emerald600,
                         labelStyle: const TextStyle(color: Colors.white),
                       )
                     else
@@ -361,7 +375,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0E7C5A),
+                    color: AppTheme.emerald600,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -385,14 +399,14 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         const Icon(
                           Icons.phone_outlined,
                           size: 18,
-                          color: Color(0xFF0E7C5A),
+                          color: AppTheme.emerald600,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           _ownerPhone!,
                           style: const TextStyle(
                             fontSize: 16,
-                            color: Color(0xFF0E7C5A),
+                            color: AppTheme.emerald600,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

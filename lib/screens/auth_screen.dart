@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'home_screen.dart';
+import '../theme/app_theme.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -79,7 +80,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   const Icon(
                     Icons.home_rounded,
                     size: 64,
-                    color: Color(0xFF0E7C5A),
+                    color: AppTheme.emerald600,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -151,7 +152,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     onPressed: _isLoading ? null : _submit,
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: const Color(0xFF0E7C5A),
+                      backgroundColor: AppTheme.emerald600,
                     ),
                     child: _isLoading
                         ? const SizedBox(

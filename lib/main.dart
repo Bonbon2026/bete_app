@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
 import 'screens/auth_screen.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,10 +24,7 @@ class BeteApp extends StatelessWidget {
     return MaterialApp(
       title: 'Bete',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF0E7C5A),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       home: const AuthScreen(),
     );
   }

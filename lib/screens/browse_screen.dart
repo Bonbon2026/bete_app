@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/listing.dart';
 import 'listing_detail_screen.dart';
+import '../theme/app_theme.dart';
 
 class BrowseScreen extends StatefulWidget {
   const BrowseScreen({super.key});
@@ -166,6 +167,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
                     ),
                     const SizedBox(width: 8),
                     IconButton.filledTonal(
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppTheme.emerald800,
+                        foregroundColor: AppTheme.gold500,
+                      ),
                       onPressed: _showPriceFilterDialog,
                       icon: Icon(
                         _maxPrice != null
@@ -281,7 +286,7 @@ class _ListingCard extends StatelessWidget {
                     '${listing.price.toStringAsFixed(0)} ETB${listing.listingType == 'rent' ? '/mo' : ''}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0E7C5A),
+                      color: AppTheme.emerald600,
                     ),
                   ),
                 ],

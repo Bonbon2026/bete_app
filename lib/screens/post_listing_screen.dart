@@ -19,6 +19,7 @@ class _PostListingScreenState extends State<PostListingScreen> {
   // Step 1 data
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  int _descriptionLength = 0;
   final _priceController = TextEditingController();
   String _listingType = 'rent';
   final _step1FormKey = GlobalKey<FormState>();
@@ -63,6 +64,16 @@ class _PostListingScreenState extends State<PostListingScreen> {
   final List<XFile> _pickedPhotos = [];
   final ImagePicker _picker = ImagePicker();
   static const int _minPhotos = 3;
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController.addListener(() {
+      setState(
+        () => _descriptionLength = _descriptionController.text.trim().length,
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -226,7 +237,7 @@ class _PostListingScreenState extends State<PostListingScreen> {
                     controller: _titleController,
                     decoration: const InputDecoration(
                       labelText: 'Title',
-                      hintText: 'e.g. Modern 2-Bedroom Apartment',
+                      hintText: 'e.g. Apartment, condominium, villa',
                       border: OutlineInputBorder(),
                     ),
                     validator: (v) => (v == null || v.trim().isEmpty)
@@ -237,14 +248,29 @@ class _PostListingScreenState extends State<PostListingScreen> {
                   TextFormField(
                     controller: _descriptionController,
                     maxLines: 4,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Description',
-                      hintText: 'Describe the property...',
-                      border: OutlineInputBorder(),
+                      hintText: 'e.g. Small studio with one room and one bathroom, quiet area',
+                      border: const OutlineInputBorder(),
+                      helperText: '$_descriptionLength / 20 characters minimum',
+                      helperStyle: TextStyle(
+                        color: _descriptionLength >= 20
+                            ? Colors.green[700]
+                            : Colors.grey[600],
+                        fontWeight: _descriptionLength >= 20
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
                     ),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Description is required'
-                        : null,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Description is required';
+                      }
+                      if (v.trim().length < 20) {
+                        return 'Please write at least 20 characters';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -379,7 +405,7 @@ class _PostListingScreenState extends State<PostListingScreen> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _pickedPhotos.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         return Stack(
                           children: [

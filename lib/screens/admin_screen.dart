@@ -35,7 +35,7 @@ class _AdminScreenState extends State<AdminScreen>
 
       final listings = await supabase
           .from('listings')
-          .select()
+          .select('*, media(id, url)')
           .eq('verification_status', 'unverified')
           .order('created_at');
 
@@ -45,8 +45,25 @@ class _AdminScreenState extends State<AdminScreen>
           .eq('status', 'pending')
           .order('created_at');
 
+      final listingsList = List<Map<String, dynamic>>.from(listings);
+
+      for (final listing in listingsList) {
+        final profile = await supabase
+            .from('profiles')
+            .select('phone')
+            .eq('id', listing['owner_id'] as String)
+            .maybeSingle();
+        listing['owner_phone'] = profile?['phone'] as String?;
+      }
+
+      listingsList.sort((a, b) {
+        final aReady = _isReadyForReview(a) ? 0 : 1;
+        final bReady = _isReadyForReview(b) ? 0 : 1;
+        return aReady.compareTo(bReady);
+      });
+
       setState(() {
-        _pendingListings = List<Map<String, dynamic>>.from(listings);
+        _pendingListings = listingsList;
         _pendingReports = List<Map<String, dynamic>>.from(reports);
         _isLoading = false;
       });
@@ -57,6 +74,40 @@ class _AdminScreenState extends State<AdminScreen>
             .showSnackBar(SnackBar(content: Text('Failed to load: $e')));
       }
     }
+  }
+
+  bool _isReadyForReview(Map<String, dynamic> listing) {
+    final description = listing['description'] as String? ?? '';
+    final neighborhood = listing['neighborhood'] as String? ?? '';
+    final mediaList = listing['media'] as List? ?? [];
+    final ownerPhone = listing['owner_phone'] as String?;
+    return description.trim().length >= 20 &&
+        neighborhood.trim().isNotEmpty &&
+        mediaList.length >= 3 &&
+        ownerPhone != null &&
+        ownerPhone.isNotEmpty;
+  }
+
+  List<String> _incompleteReasons(Map<String, dynamic> listing) {
+    final reasons = <String>[];
+    final description = listing['description'] as String? ?? '';
+    final neighborhood = listing['neighborhood'] as String? ?? '';
+    final mediaList = listing['media'] as List? ?? [];
+    final ownerPhone = listing['owner_phone'] as String?;
+
+    if (description.trim().length < 20) {
+      reasons.add('Description is too short (needs 20+ characters)');
+    }
+    if (neighborhood.trim().isEmpty) {
+      reasons.add('Neighborhood is missing');
+    }
+    if (mediaList.length < 3) {
+      reasons.add('Only ${mediaList.length} photo(s) — needs at least 3');
+    }
+    if (ownerPhone == null || ownerPhone.isEmpty) {
+      reasons.add('Owner has no phone number on file');
+    }
+    return reasons;
   }
 
   Future<void> _approveListing(String listingId) async {
@@ -131,17 +182,118 @@ class _AdminScreenState extends State<AdminScreen>
         itemCount: _pendingListings.length,
         itemBuilder: (context, index) {
           final listing = _pendingListings[index];
+          final ready = _isReadyForReview(listing);
+          final photoUrls = (listing['media'] as List)
+              .map((m) => m['url'] as String)
+              .toList();
+
           return Card(
             margin: const EdgeInsets.only(bottom: 10),
-            child: ListTile(
-              title: Text(listing['title'] as String),
+            child: ExpansionTile(
+              title: Row(
+                children: [
+                  Expanded(child: Text(listing['title'] as String)),
+                  GestureDetector(
+                    onTap: ready
+                        ? null
+                        : () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Why this is incomplete'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: _incompleteReasons(listing)
+                                      .map(
+                                        (r) => Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 6,
+                                          ),
+                                          child: Text('• $r'),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Close'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ready ? Colors.green[50] : Colors.orange[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: ready ? Colors.green : Colors.orange,
+                        ),
+                      ),
+                      child: Text(
+                        ready ? 'Ready' : 'Incomplete',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: ready ? Colors.green[800] : Colors.orange[800],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               subtitle: Text(
                 '${listing['neighborhood']} • ${(listing['price'] as num).toStringAsFixed(0)} ETB',
               ),
-              trailing: FilledButton(
-                onPressed: () => _approveListing(listing['id'] as String),
-                child: const Text('Approve'),
-              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (photoUrls.isNotEmpty)
+                        SizedBox(
+                          height: 90,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: photoUrls.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 6),
+                            itemBuilder: (context, i) => ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                photoUrls[i],
+                                width: 90,
+                                height: 90,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 10),
+                      Text(
+                        listing['description'] as String? ?? '',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: FilledButton(
+                          onPressed: () =>
+                              _approveListing(listing['id'] as String),
+                          child: const Text('Approve'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           );
         },
