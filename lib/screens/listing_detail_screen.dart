@@ -21,6 +21,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   int _currentPhoto = 0;
   String? _ownerPhone;
   bool _loadingOwner = true;
+  bool _isOwner = false;
 
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
       setState(() {
         _ownerPhone = profile?['phone'] as String?;
+        _isOwner = supabase.auth.currentUser?.id == ownerId;
         _loadingOwner = false;
       });
     } catch (e) {
@@ -59,6 +61,42 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     final uri = Uri(scheme: 'tel', path: _ownerPhone);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
+    }
+  }
+
+  Future<void> _deleteListing() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this listing?'),
+        content: const Text('This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await Supabase.instance.client
+          .from('listings')
+          .delete()
+          .eq('id', widget.listing.id);
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+      }
     }
   }
 
@@ -177,11 +215,18 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(
-            icon: const Icon(Icons.flag_outlined),
-            tooltip: 'Report this listing',
-            onPressed: _showReportDialog,
-          ),
+          if (_isOwner)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              tooltip: 'Delete this listing',
+              onPressed: _deleteListing,
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.flag_outlined),
+              tooltip: 'Report this listing',
+              onPressed: _showReportDialog,
+            ),
         ],
       ),
       body: ListView(

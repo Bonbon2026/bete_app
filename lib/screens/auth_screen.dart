@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'home_screen.dart';
 import '../theme/app_theme.dart';
@@ -93,10 +94,14 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _isSignUp ? 'Create an account' : 'Welcome back',
+                    _isSignUp ? 'Create an account' : 'Welcome',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge
-                        ?.copyWith(color: Colors.grey[600]),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.emerald800,
+                      letterSpacing: 0.3,
+                    ),
                   ),
                   const SizedBox(height: 32),
 

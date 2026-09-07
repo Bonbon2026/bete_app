@@ -5,6 +5,7 @@ import 'browse_screen.dart';
 import 'post_listing_screen.dart';
 import 'complete_profile_screen.dart';
 import 'admin_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -56,10 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
-              if (context.mounted) Navigator.of(context).pop();
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Profile',
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
             },
           ),
         ],
