@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
-import 'screens/auth_screen.dart';
 import 'theme/app_theme.dart';
+import 'screens/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +25,7 @@ class BeteApp extends StatelessWidget {
       title: 'Bete',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const AuthScreen(),
+      home: const SplashScreen(),
     );
   }
 }
