@@ -149,6 +149,42 @@ class _AdminScreenState extends State<AdminScreen>
     }
   }
 
+  Future<void> _deleteListing(String listingId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this listing?'),
+        content: const Text('This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await Supabase.instance.client
+          .from('listings')
+          .delete()
+          .eq('id', listingId);
+      _loadData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -251,6 +287,11 @@ class _AdminScreenState extends State<AdminScreen>
               subtitle: Text(
                 '${listing['neighborhood']} • ${(listing['price'] as num).toStringAsFixed(0)} ETB',
               ),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                tooltip: 'Delete this listing',
+                onPressed: () => _deleteListing(listing['id'] as String),
+              ),
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -347,6 +388,16 @@ class _AdminScreenState extends State<AdminScreen>
                         onPressed: () =>
                             _resolveReport(report['id'] as String, 'reviewed'),
                         child: const Text('Mark Reviewed'),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
+                        tooltip: 'Delete the reported listing',
+                        onPressed: () =>
+                            _deleteListing(report['listing_id'] as String),
                       ),
                     ],
                   ),

@@ -92,7 +92,16 @@ class _AuthScreenState extends State<AuthScreen> {
                       color: const Color(0xFF022B1F),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 1),
+                  Text(
+                    'Move into what matters',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.dancingScript(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.emerald700,
+                    ),
+                  ),
                   Text(
                     _isSignUp ? 'Create an account' : 'Welcome',
                     textAlign: TextAlign.center,

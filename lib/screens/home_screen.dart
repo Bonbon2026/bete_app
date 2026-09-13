@@ -6,6 +6,7 @@ import 'post_listing_screen.dart';
 import 'complete_profile_screen.dart';
 import 'admin_screen.dart';
 import 'profile_screen.dart';
+import 'favorites_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -56,13 +57,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ).push(MaterialPageRoute(builder: (_) => const AdminScreen()));
               },
             ),
+
           IconButton(
-            icon: const Icon(Icons.person_outline),
-            tooltip: 'Profile',
+            icon: const Icon(Icons.favorite_border),
+            tooltip: 'My Favorites',
             onPressed: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+              );
             },
           ),
         ],

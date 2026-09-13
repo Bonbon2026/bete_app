@@ -22,11 +22,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   String? _ownerPhone;
   bool _loadingOwner = true;
   bool _isOwner = false;
+  bool _isFavorited = false;
 
   @override
   void initState() {
     super.initState();
     _loadOwnerContact();
+    _checkFavoriteStatus();
   }
 
   Future<void> _loadOwnerContact() async {
@@ -56,6 +58,51 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     }
   }
 
+  Future<void> _checkFavoriteStatus() async {
+    try {
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      final favorite = await supabase
+          .from('favorites')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('listing_id', widget.listing.id)
+          .maybeSingle();
+
+      setState(() => _isFavorited = favorite != null);
+    } catch (_) {}
+  }
+
+  Future<void> _toggleFavorite() async {
+    final supabase = Supabase.instance.client;
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      if (_isFavorited) {
+        await supabase
+            .from('favorites')
+            .delete()
+            .eq('user_id', userId)
+            .eq('listing_id', widget.listing.id);
+      } else {
+        await supabase.from('favorites').insert({
+          'user_id': userId,
+          'listing_id': widget.listing.id,
+        });
+      }
+      setState(() => _isFavorited = !_isFavorited);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update favorite: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _callOwner() async {
     if (_ownerPhone == null) return;
     final uri = Uri(scheme: 'tel', path: _ownerPhone);
@@ -64,21 +111,27 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     }
   }
 
-  Future<void> _deleteListing() async {
+  Future<void> _markAsUnavailable() async {
+    final listingTypeLabel = widget.listing.listingType == 'rent'
+        ? 'Rented'
+        : 'Sold';
+    final newStatus = widget.listing.listingType == 'rent' ? 'rented' : 'sold';
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete this listing?'),
-        content: const Text('This cannot be undone.'),
+        title: Text('Mark as $listingTypeLabel?'),
+        content: const Text(
+          'This listing will be removed from active search results.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text('Mark as $listingTypeLabel'),
           ),
         ],
       ),
@@ -87,15 +140,44 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     if (confirmed != true) return;
 
     try {
-      await Supabase.instance.client
+      final supabase = Supabase.instance.client;
+
+      await supabase
           .from('listings')
-          .delete()
+          .update({'status': newStatus})
           .eq('id', widget.listing.id);
+
+      final admins = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('is_admin', true);
+      for (final admin in admins as List) {
+        await supabase.from('notifications').insert({
+          'user_id': admin['id'],
+          'type': 'listing_status',
+          'content':
+              '"${widget.listing.title}" was marked as $listingTypeLabel',
+        });
+      }
+
+      final favorites = await supabase
+          .from('favorites')
+          .select('user_id')
+          .eq('listing_id', widget.listing.id);
+      for (final fav in favorites as List) {
+        await supabase.from('notifications').insert({
+          'user_id': fav['user_id'],
+          'type': 'listing_status',
+          'content':
+              '"${widget.listing.title}" you saved is now $listingTypeLabel',
+        });
+      }
+
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+            .showSnackBar(SnackBar(content: Text('Failed to update: $e')));
       }
     }
   }
@@ -215,11 +297,29 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         actions: [
+          IconButton(
+            icon: Icon(
+              _isFavorited ? Icons.favorite : Icons.favorite_border,
+              color: _isFavorited ? Colors.red : null,
+            ),
+            tooltip: 'Save to favorites',
+            onPressed: _toggleFavorite,
+          ),
           if (_isOwner)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              tooltip: 'Delete this listing',
-              onPressed: _deleteListing,
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton.icon(
+                onPressed: _markAsUnavailable,
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: Text(
+                  widget.listing.listingType == 'rent'
+                      ? 'Mark as Rented'
+                      : 'Mark as Sold',
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.emerald700,
+                ),
+              ),
             )
           else
             IconButton(
@@ -358,6 +458,27 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               children: [
                 Row(
                   children: [
+                    if (listing.status != 'active') ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[800],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          listing.status == 'rented' ? 'RENTED' : 'SOLD',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ],
                     Chip(
                       label: Text(
                         listing.listingType == 'rent' ? 'For Rent' : 'For Sale',

@@ -10,6 +10,7 @@ class Listing {
   final DateTime? lastVerifiedAt;
   final DateTime createdAt;
   final List<String> photoUrls;
+  final String status;
 
   Listing({
     required this.id,
@@ -23,6 +24,7 @@ class Listing {
     this.lastVerifiedAt,
     required this.createdAt,
     required this.photoUrls,
+    required this.status,
   });
 
   factory Listing.fromMap(Map<String, dynamic> map, List<String> photoUrls) {
@@ -40,6 +42,7 @@ class Listing {
           : null,
       createdAt: DateTime.parse(map['created_at'] as String),
       photoUrls: photoUrls,
+      status: map['status'] as String? ?? 'active',
     );
   }
 }
