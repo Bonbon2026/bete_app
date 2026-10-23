@@ -140,57 +140,30 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     if (confirmed != true) return;
 
     try {
-      final supabase = Supabase.instance.client;
-
-      await supabase
+      await Supabase.instance.client
           .from('listings')
           .update({'status': newStatus})
           .eq('id', widget.listing.id);
 
-      final admins = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('is_admin', true);
-      for (final admin in admins as List) {
-        await supabase.from('notifications').insert({
-          'user_id': admin['id'],
-          'type': 'listing_status',
-          'content':
-              '"${widget.listing.title}" was marked as $listingTypeLabel',
-        });
-      }
+      if (!mounted) return;
 
-      final favorites = await supabase
-          .from('favorites')
-          .select('user_id')
-          .eq('listing_id', widget.listing.id);
-      for (final fav in favorites as List) {
-        await supabase.from('notifications').insert({
-          'user_id': fav['user_id'],
-          'type': 'listing_status',
-          'content':
-              '"${widget.listing.title}" you saved is now $listingTypeLabel',
-        });
-      }
-
-      if (mounted) {
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('🎉 Congratulations!'),
-            content: Text(
-              'Your listing has been marked as $listingTypeLabel. Great job!',
-            ),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Done'),
-              ),
-            ],
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('🎉 Congratulations!'),
+          content: Text(
+            'Your listing has been marked as $listingTypeLabel. Great job!',
           ),
-        );
-        if (mounted) Navigator.of(context).pop();
-      }
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      );
+
+      if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
