@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'home_screen.dart';
 import '../theme/app_theme.dart';
+import '../i18n/app_i18n.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -103,7 +104,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                   Text(
-                    _isSignUp ? 'Create an account' : 'Welcome',
+                    _isSignUp
+                        ? AppI18n.of(context).t.createAccount
+                        : AppI18n.of(context).t.welcome,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 20,

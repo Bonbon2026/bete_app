@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../i18n/app_i18n.dart';
+import '../i18n/translations.dart';
 import '../theme/app_theme.dart';
 import 'auth_screen.dart';
+
+const String _privacyText =
+    'We protect your personal data and never share it without consent. '
+    'Your information is encrypted and used only to improve your Bete experience.';
+
+const String _termsText =
+    'By using Bete, you agree to our terms of service. Bete is a listing '
+    'platform and does not process payments directly. Always verify '
+    'listings and meet in safe locations.\n\n'
+    'Commission: when a property listed for sale on Bete is sold, a commission '
+    'of 2.5% of the final sale price applies. There is no commission on rentals.';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -32,6 +45,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  String _languageName(AppLang lang) {
+    switch (lang) {
+      case AppLang.en:
+        return 'English';
+      case AppLang.am:
+        return 'አማርኛ (Amharic)';
+      case AppLang.om:
+        return 'Afaan Oromoo';
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -85,40 +109,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showLanguageDialog() {
+    final current = AppI18n.of(context).lang;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Language'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              title: const Text('English'),
-              trailing: const Icon(Icons.check, color: AppTheme.emerald600),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              title: const Text('አማርኛ (Amharic)'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Amharic support is coming soon'),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              title: const Text('Afaan Oromoo'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Afaan Oromoo support is coming soon'),
-                  ),
-                );
-              },
-            ),
+            for (final lang in AppLang.values)
+              ListTile(
+                title: Text(_languageName(lang)),
+                trailing: lang == current
+                    ? const Icon(Icons.check, color: AppTheme.emerald600)
+                    : null,
+                onTap: () {
+                  AppI18n.of(context).setLang(lang);
+                  Navigator.pop(dialogContext);
+                  setState(() {});
+                },
+              ),
           ],
         ),
       ),
@@ -235,10 +246,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty)
+                            if (v == null || v.trim().isEmpty) {
                               return 'Phone number is required';
-                            if (v.trim().length < 9)
+                            }
+                            if (v.trim().length < 9) {
                               return 'Enter a valid phone number';
+                            }
                             return null;
                           },
                         ),
@@ -320,7 +333,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: AppTheme.emerald700,
                   ),
                   title: const Text('Language'),
-                  subtitle: const Text('English'),
+                  subtitle: Text(_languageName(AppI18n.of(context).lang)),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: _showLanguageDialog,
                 ),
@@ -331,11 +344,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   title: const Text('Privacy Policy'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _showTextDialog(
-                    'Privacy Policy',
-                    'We protect your personal data and never share it without consent. '
-                        'Your information is encrypted and used only to improve your Bete experience.',
-                  ),
+                  onTap: () => _showTextDialog('Privacy Policy', _privacyText),
                 ),
                 ListTile(
                   leading: const Icon(
@@ -344,12 +353,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   title: const Text('Terms & Conditions'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _showTextDialog(
-                    'Terms & Conditions',
-                    'By using Bete, you agree to our terms of service. Bete is a listing '
-                        'platform and does not process payments directly. Always verify '
-                        'listings and meet in safe locations.',
-                  ),
+                  onTap: () =>
+                      _showTextDialog('Terms & Conditions', _termsText),
                 ),
                 const Divider(),
                 ListTile(

@@ -7,6 +7,7 @@ import 'complete_profile_screen.dart';
 import 'admin_screen.dart';
 import 'profile_screen.dart';
 import 'favorites_screen.dart';
+import 'notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,6 +59,15 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
 
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            tooltip: 'Notifications',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.favorite_border),
             tooltip: 'My Favorites',

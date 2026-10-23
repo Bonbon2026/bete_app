@@ -97,7 +97,30 @@ class _PostListingScreenState extends State<PostListingScreen> {
     setState(() => _pickedPhotos.removeAt(index));
   }
 
-  void _handleContinue() {
+  Future<bool> _confirmCommission() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Commission Notice'),
+        content: const Text(
+          'A 2.5% commission on the final sale price applies once your property is sold through Bete. This is detailed in our Terms & Conditions.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('I Understand, Post'),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Future<void> _handleContinue() async {
     if (_currentStep == 0) {
       if (_step1FormKey.currentState!.validate()) {
         setState(() => _currentStep += 1);
@@ -113,6 +136,12 @@ class _PostListingScreenState extends State<PostListingScreen> {
         );
         return;
       }
+
+      if (_listingType == 'sale') {
+        final accepted = await _confirmCommission();
+        if (!accepted || !mounted) return;
+      }
+
       _submitListing();
     }
   }
@@ -237,7 +266,7 @@ class _PostListingScreenState extends State<PostListingScreen> {
                     controller: _titleController,
                     decoration: const InputDecoration(
                       labelText: 'Title',
-                      hintText: 'e.g. Apartment, condominium, villa',
+                      hintText: 'e.g. Modern 2-Bedroom Apartment',
                       border: OutlineInputBorder(),
                     ),
                     validator: (v) => (v == null || v.trim().isEmpty)
@@ -250,9 +279,11 @@ class _PostListingScreenState extends State<PostListingScreen> {
                     maxLines: 4,
                     decoration: InputDecoration(
                       labelText: 'Description',
-                      hintText: 'e.g. Small studio with one room and one bathroom, quiet area',
+                      hintText:
+                          'e.g. Small studio with one room and one bathroom, quiet area',
                       border: const OutlineInputBorder(),
-                      helperText: '$_descriptionLength / 20 characters minimum',
+                      helperText:
+                          '$_descriptionLength / 20 characters minimum',
                       helperStyle: TextStyle(
                         color: _descriptionLength >= 20
                             ? Colors.green[700]
@@ -361,8 +392,9 @@ class _PostListingScreenState extends State<PostListingScreen> {
                       onChanged: (value) {
                         setState(() => _subCityController.text = value ?? '');
                       },
-                      validator: (v) =>
-                          (v == null || v.isEmpty) ? 'Select a sub-city' : null,
+                      validator: (v) => (v == null || v.isEmpty)
+                          ? 'Select a sub-city'
+                          : null,
                     ),
                   const SizedBox(height: 16),
                   TextFormField(

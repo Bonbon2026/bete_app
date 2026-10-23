@@ -173,7 +173,24 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         });
       }
 
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('🎉 Congratulations!'),
+            content: Text(
+              'Your listing has been marked as $listingTypeLabel. Great job!',
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              ),
+            ],
+          ),
+        );
+        if (mounted) Navigator.of(context).pop();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
